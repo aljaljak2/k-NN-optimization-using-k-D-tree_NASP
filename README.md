@@ -54,20 +54,14 @@ This implementation follows algorithms and techniques from the following peer-re
 
 ## Implementations
 
-### Completed
-- ✓ Project structure
-
-### In Progress
-- Basic k-d tree (Bentley 1975)
-
-### Planned
-1. Classic k-NN (brute force baseline)
-2. k-NN with k-d tree optimization
-3. Benchmarking framework
-4. 2D/3D visualization
+1. Classic k-NN (brute-force baseline)
+2. Basic k-d tree (Bentley 1975)
+3. k-NN with k-d tree optimization
+4. Revised k-d tree (Jiang et al. 2018)
 5. QuickNN optimizations (Pinkham et al. 2020)
-6. Revised k-d tree (Jiang et al. 2018)
-7. k-NN variants (Uddin et al. 2022)
+6. k-NN variants (Uddin et al. 2022)
+7. Benchmarking framework
+8. 2D/3D visualization
 
 ## Building the Project
 
