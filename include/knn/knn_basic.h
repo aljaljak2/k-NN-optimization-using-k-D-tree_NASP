@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "../utils/point.h"
+#include "../utils/distance_metrics.h"
 
 /**
  * Classic k-NN implementation (brute force)
@@ -14,9 +15,13 @@ class KNNBasic {
 private:
     std::vector<Point> trainingData;
     int k;
+    DistanceType distanceMetric;
+    double minkowskiP;  // Parameter for Minkowski distance
+
+    double calculateDistance(const Point& a, const Point& b) const;
 
 public:
-    KNNBasic(int k_neighbors);
+    KNNBasic(int k_neighbors, DistanceType metric = DistanceType::EUCLIDEAN, double p = 2.0);
 
     void fit(const std::vector<Point>& data);
     std::vector<Point> findKNearest(const Point& query);

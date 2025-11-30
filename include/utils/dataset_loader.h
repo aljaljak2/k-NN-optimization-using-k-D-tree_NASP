@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 #include "point.h"
 
 /**
@@ -11,8 +12,14 @@
  */
 class DatasetLoader {
 public:
-    // Load CSV format datasets
+    // Load CSV format datasets (numeric only)
     static std::vector<Point> loadCSV(const std::string& filepath, bool hasHeader = true);
+
+    // Load CSV with automatic one-hot encoding for categorical columns
+    // categoricalColumns: indices of columns to one-hot encode (empty = auto-detect)
+    static std::vector<Point> loadCSVWithEncoding(const std::string& filepath,
+                                                   bool hasHeader = true,
+                                                   const std::vector<int>& categoricalColumns = {});
 
     // Generate synthetic datasets for testing
     static std::vector<Point> generateRandom(int numPoints, int dimensions, int seed = 42);
@@ -25,6 +32,13 @@ public:
                                std::vector<Point>& test,
                                double testRatio = 0.2,
                                int seed = 42);
+
+private:
+    // Helper: Check if string is numeric
+    static bool isNumeric(const std::string& str);
+
+    // Helper: Detect categorical columns automatically
+    static std::vector<int> detectCategoricalColumns(const std::string& filepath, bool hasHeader);
 };
 
 #endif // DATASET_LOADER_H

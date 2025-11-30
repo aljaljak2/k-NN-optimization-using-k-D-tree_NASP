@@ -2,6 +2,7 @@
 #define KDTREE_H
 
 #include "kdnode.h"
+#include "../utils/point.h"
 #include <vector>
 
 /**
@@ -22,35 +23,51 @@ private:
 
     // Algorithm functions from Bentley 1975
     int nextdisc(int disc);
-    std::vector<double> superkey(const std::vector<double>& point, int j);
+    std::vector<double> superkey(const Point& point, int j);
 
     enum SuccessorResult { LOSON, HISON, EQUAL };
-    SuccessorResult successor(KDNode* node, const std::vector<double>& point);
+    SuccessorResult successor(KDNode* node, const Point& point);
 
     // Helper functions
     KDNode* findMin(KDNode* node, int dim, int currentDisc);
     KDNode* findMax(KDNode* node, int dim, int currentDisc);
-    KDNode* deleteNode(KDNode* node, const std::vector<double>& point);
-    KDNode* searchRec(KDNode* node, const std::vector<double>& point);
+    KDNode* deleteNode(KDNode* node, const Point& point);
+    KDNode* searchRec(KDNode* node, const Point& point);
     void inorderRec(KDNode* node);
 
     // Nearest neighbor search
-    double distance(const std::vector<double>& a, const std::vector<double>& b);
-    void nearestNeighborRec(KDNode* node, const std::vector<double>& target,
-                           std::vector<double>& best, double& bestDist);
+    double distance(const Point& a, const Point& b);
+    void nearestNeighborRec(KDNode* node, const Point& target,
+                           Point& best, double& bestDist);
+
+    // k-NN search helper
+    struct NeighborCandidate {
+        Point point;
+        double distance;
+
+        bool operator<(const NeighborCandidate& other) const {
+            return distance < other.distance;
+        }
+    };
+
+    void kNearestRec(KDNode* node, const Point& target,
+                    std::vector<NeighborCandidate>& candidates, int k);
 
 public:
     KDTree(int dimensions);
     ~KDTree();
 
     // Main operations
-    bool insert(const std::vector<double>& point);
-    bool search(const std::vector<double>& point);
-    void remove(const std::vector<double>& point);
+    bool insert(const Point& point);
+    bool search(const Point& point);
+    void remove(const Point& point);
     void inorder();
 
-    // k-NN search
-    std::vector<double> nearestNeighbor(const std::vector<double>& target);
+    // Nearest neighbor search
+    Point nearestNeighbor(const Point& target);
+
+    // k-NN search - find k nearest neighbors
+    std::vector<Point> kNearestNeighbors(const Point& target, int k);
 };
 
 #endif // KDTREE_H

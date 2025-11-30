@@ -1,7 +1,7 @@
 #ifndef KDNODE_H
 #define KDNODE_H
 
-#include <vector>
+#include "../utils/point.h"
 
 /**
  * KDNode - Node structure for k-d tree
@@ -10,12 +10,12 @@
  */
 class KDNode {
 public:
-    std::vector<double> point;  // k-dimensional point
-    int disc;                   // discriminator (0 to k-1)
-    KDNode* loson;             // left subtree (lesser values)
-    KDNode* hison;             // right subtree (greater values)
+    Point point;       // k-dimensional point with label
+    int disc;          // discriminator (0 to k-1)
+    KDNode* loson;     // left subtree (lesser values)
+    KDNode* hison;     // right subtree (greater values)
 
-    KDNode(const std::vector<double>& p, int d);
+    KDNode(const Point& p, int d);
     ~KDNode();
 };
 

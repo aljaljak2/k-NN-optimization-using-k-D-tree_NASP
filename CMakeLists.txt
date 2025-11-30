@@ -14,33 +14,41 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 # Source files for libraries
 set(KDTREE_SOURCES
     src/kdtree/kdnode.cpp
-    src/kdtree/kdtree_original.cpp
+    src/kdtree/kdtree.cpp
+)
+
+set(KNN_SOURCES
+    src/knn/knn_basic.cpp
+    src/knn/knn_kdtree.cpp
 )
 
 set(UTILS_SOURCES
     src/utils/point.cpp
     src/utils/distance_metrics.cpp
+    src/utils/dataset_loader.cpp
+    src/utils/metrics.cpp
 )
 
 # Libraries
 add_library(kdtree ${KDTREE_SOURCES})
+add_library(knn ${KNN_SOURCES})
 add_library(utils ${UTILS_SOURCES})
 
-# Examples
-add_executable(example_bentley_1975 examples/example_bentley_1975.cpp)
-target_link_libraries(example_bentley_1975 kdtree utils)
+# Tests
+add_executable(test_knn_basic tests/test_knn_basic.cpp)
+target_link_libraries(test_knn_basic knn utils)
 
-# Benchmarks
-add_executable(benchmark_basic_vs_kdtree benchmarks/benchmark_basic_vs_kdtree.cpp)
-target_link_libraries(benchmark_basic_vs_kdtree kdtree utils)
+add_executable(test_knn_kdtree tests/test_knn_kdtree.cpp)
+target_link_libraries(test_knn_kdtree knn kdtree utils)
 
-# Tests (if using a testing framework like Google Test)
-# enable_testing()
-# add_subdirectory(tests)
+# Examples (commented out - not yet implemented)
+# add_executable(example_bentley_1975 examples/example_bentley_1975.cpp)
+# target_link_libraries(example_bentley_1975 kdtree utils)
 
-# Visualization tools
-add_executable(visualize_kdtree visualization/visualize_kdtree.cpp)
-target_link_libraries(visualize_kdtree kdtree utils)
+# Benchmarks (commented out - not yet implemented)
+# add_executable(benchmark_basic_vs_kdtree benchmarks/benchmark_basic_vs_kdtree.cpp)
+# target_link_libraries(benchmark_basic_vs_kdtree kdtree utils)
 
-# Original kdtree.cpp as standalone executable
-add_executable(kdtree_original src/kdtree/kdtree_original.cpp)
+# Visualization tools (commented out - not yet implemented)
+# add_executable(visualize_kdtree visualization/visualize_kdtree.cpp)
+# target_link_libraries(visualize_kdtree kdtree utils)

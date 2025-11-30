@@ -42,4 +42,14 @@ double minkowski(const Point& a, const Point& b, double p) {
     return std::pow(sum, 1.0 / p);
 }
 
+double hamming(const Point& a, const Point& b) {
+    double count = 0;
+    for (size_t i = 0; i < a.coordinates.size(); i++) {
+        if (a.coordinates[i] != b.coordinates[i]) {
+            count++;
+        }
+    }
+    return count;
+}
+
 } // namespace DistanceMetrics

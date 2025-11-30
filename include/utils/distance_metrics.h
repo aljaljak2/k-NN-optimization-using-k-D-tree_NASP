@@ -22,6 +22,17 @@ namespace DistanceMetrics {
 
     // Minkowski distance (generalized)
     double minkowski(const Point& a, const Point& b, double p);
+
+    // Hamming distance (for discrete/binary features)
+    double hamming(const Point& a, const Point& b);
 }
+
+// Distance metric types
+enum class DistanceType {
+    EUCLIDEAN,
+    MANHATTAN,
+    HAMMING,
+    MINKOWSKI
+};
 
 #endif // DISTANCE_METRICS_H
