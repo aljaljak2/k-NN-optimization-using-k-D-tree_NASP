@@ -1,0 +1,14 @@
+# U PowerShell
+cd C:\Fakultet\M1\NASP\projekat-NASP\Implementacija
+rm -r build  # Obriši stari build
+mkdir build
+cd build
+
+# Forsiraj MinGW Makefiles generator
+cmake -G "MinGW Makefiles" ..
+
+# Build
+mingw32-make
+
+# Sada možeš pokrenuti
+./test_knn_basic.exe ../datasets/simple_test.csv 3
