@@ -8,7 +8,9 @@
 #include <set>
 #include <cctype>
 
-std::vector<Point> DatasetLoader::loadCSV(const std::string& filepath, bool hasHeader) {
+std::vector<Point> DatasetLoader::loadCSV(const std::string& filepath,
+                                           bool hasHeader,
+                                           int labelColumn) {
     std::vector<Point> data;
     std::ifstream file(filepath);
 
@@ -33,9 +35,10 @@ std::vector<Point> DatasetLoader::loadCSV(const std::string& filepath, bool hasH
 
         std::stringstream ss(line);
         std::string cell;
-        std::vector<double> coords;
+        std::vector<double> allValues;
         int label = -1;
 
+        // Parse all cells
         while (std::getline(ss, cell, ',')) {
             // Trim whitespace
             cell.erase(0, cell.find_first_not_of(" \t\r\n"));
@@ -47,20 +50,32 @@ std::vector<Point> DatasetLoader::loadCSV(const std::string& filepath, bool hasH
 
             try {
                 double value = std::stod(cell);
-                coords.push_back(value);
+                allValues.push_back(value);
             } catch (...) {
                 // If conversion fails, skip this cell
                 continue;
             }
         }
 
-        if (!coords.empty()) {
-            // Last column is the label
-            label = static_cast<int>(coords.back());
-            coords.pop_back();
+        if (!allValues.empty()) {
+            // Determine label column index (-1 means last column)
+            int labelIdx = labelColumn;
+            if (labelIdx == -1) {
+                labelIdx = allValues.size() - 1;
+            }
 
-            // Create point with remaining coordinates
-            if (!coords.empty()) {
+            // Extract label and build coordinates vector
+            std::vector<double> coords;
+            for (size_t i = 0; i < allValues.size(); i++) {
+                if (static_cast<int>(i) == labelIdx) {
+                    label = static_cast<int>(allValues[i]);
+                } else {
+                    coords.push_back(allValues[i]);
+                }
+            }
+
+            // Create point with coordinates (excluding label)
+            if (!coords.empty() && label != -1) {
                 data.emplace_back(coords, label);
             }
         }
@@ -195,7 +210,9 @@ bool DatasetLoader::isNumeric(const std::string& str) {
 }
 
 // Helper: Detect categorical columns automatically
-std::vector<int> DatasetLoader::detectCategoricalColumns(const std::string& filepath, bool hasHeader) {
+std::vector<int> DatasetLoader::detectCategoricalColumns(const std::string& filepath,
+                                                          bool hasHeader,
+                                                          int labelColumn) {
     std::vector<int> categoricalCols;
     std::ifstream file(filepath);
     std::cout << "Detecting categorical columns in file: " << filepath << std::endl;
@@ -253,11 +270,22 @@ std::vector<int> DatasetLoader::detectCategoricalColumns(const std::string& file
 
     file.close();
 
-    // Collect categorical column indices (exclude last column - label)
+    // Determine label column index (-1 means last column)
+    int labelIdx = labelColumn;
+    if (labelIdx == -1 && !isNumericColumn.empty()) {
+        labelIdx = isNumericColumn.size() - 1;
+    }
+
+    // Collect categorical column indices (exclude label column)
     // Skip columns with too many unique values (likely IDs or other non-categorical data)
     const int MAX_CATEGORIES = 50;  // Maximum number of categories to one-hot encode
 
-    for (size_t i = 0; i < isNumericColumn.size() - 1; i++) {
+    for (size_t i = 0; i < isNumericColumn.size(); i++) {
+        // Skip label column
+        if (static_cast<int>(i) == labelIdx) {
+            continue;
+        }
+
         if (!isNumericColumn[i]) {
             int numUnique = uniqueValues[i].size();
             if (numUnique <= MAX_CATEGORIES) {
@@ -275,7 +303,8 @@ std::vector<int> DatasetLoader::detectCategoricalColumns(const std::string& file
 // Load CSV with one-hot encoding
 std::vector<Point> DatasetLoader::loadCSVWithEncoding(const std::string& filepath,
                                                        bool hasHeader,
-                                                       const std::vector<int>& categoricalColumns) {
+                                                       const std::vector<int>& categoricalColumns,
+                                                       int labelColumn) {
     std::ifstream file(filepath);
 
     if (!file.is_open()) {
@@ -286,15 +315,17 @@ std::vector<Point> DatasetLoader::loadCSVWithEncoding(const std::string& filepat
     std::vector<int> catCols = categoricalColumns;
     if (catCols.empty()) {
         std::cout << "Auto-detecting categorical columns..." << std::endl;
-        catCols = detectCategoricalColumns(filepath, hasHeader);
+        catCols = detectCategoricalColumns(filepath, hasHeader, labelColumn);
         std::cout << "Found " << catCols.size() << " categorical columns to encode" << std::endl;
     }
 
     std::set<int> catColSet(catCols.begin(), catCols.end());
 
-    // First pass: collect all unique values for categorical columns
+    // First pass: collect all unique values for categorical columns AND label column
     std::map<int, std::set<std::string>> categoryValues;
     std::map<int, std::map<std::string, int>> categoryEncoding;
+    std::set<std::string> labelValues;  // Track label values to detect if label is categorical
+    int determinedLabelColumn = -1;     // Will be set in first pass
 
     std::string line;
     bool firstLine = true;
@@ -309,21 +340,38 @@ std::vector<Point> DatasetLoader::loadCSVWithEncoding(const std::string& filepat
 
         std::stringstream ss(line);
         std::string cell;
-        int colIndex = 0;
+        std::vector<std::string> cells;
 
+        // Parse all cells
         while (std::getline(ss, cell, ',')) {
             cell.erase(0, cell.find_first_not_of(" \t\r\n"));
             cell.erase(cell.find_last_not_of(" \t\r\n") + 1);
-
-            if (catColSet.count(colIndex)) {
-                categoryValues[colIndex].insert(cell);
-            }
-            colIndex++;
+            cells.push_back(cell);
         }
+
+        // Determine label column on first data row
+        if (determinedLabelColumn == -1 && !cells.empty()) {
+            determinedLabelColumn = labelColumn;
+            if (determinedLabelColumn == -1) {
+                determinedLabelColumn = cells.size() - 1;
+            }
+        }
+
+        // Collect values for categorical feature columns
+        for (size_t i = 0; i < cells.size(); i++) {
+            if (catColSet.count(i)) {
+                categoryValues[i].insert(cells[i]);
+            }
+            // Also collect label values if this is the label column
+            if (static_cast<int>(i) == determinedLabelColumn) {
+                labelValues.insert(cells[i]);
+            }
+        }
+
         firstLine = false;
     }
 
-    // Create encoding maps
+    // Create encoding maps for feature columns
     int totalEncodedDimensions = 0;
     for (const auto& [colIdx, values] : categoryValues) {
         int encoding = 0;
@@ -334,6 +382,24 @@ std::vector<Point> DatasetLoader::loadCSVWithEncoding(const std::string& filepat
         }
     }
     std::cout << "Total dimensions from categorical encoding: " << totalEncodedDimensions << std::endl;
+
+    // Check if label is categorical (non-numeric) and create encoding for it
+    bool labelIsCategorical = false;
+    for (const auto& labelValue : labelValues) {
+        if (!isNumeric(labelValue)) {
+            labelIsCategorical = true;
+            break;
+        }
+    }
+
+    if (labelIsCategorical && determinedLabelColumn != -1) {
+        std::cout << "Label column (" << determinedLabelColumn << ") is categorical with "
+                  << labelValues.size() << " unique values" << std::endl;
+        int labelEncoding = 0;
+        for (const auto& value : labelValues) {
+            categoryEncoding[determinedLabelColumn][value] = labelEncoding++;
+        }
+    }
 
     // Second pass: load data with one-hot encoding
     file.clear();
@@ -365,8 +431,29 @@ std::vector<Point> DatasetLoader::loadCSVWithEncoding(const std::string& filepat
 
         if (cells.empty()) continue;
 
-        // Process all columns except last (label)
-        for (size_t i = 0; i < cells.size() - 1; i++) {
+        // Determine label column index (-1 means last column)
+        int labelIdx = labelColumn;
+        if (labelIdx == -1) {
+            labelIdx = cells.size() - 1;
+        }
+
+        // Process all columns (skip label column)
+        for (size_t i = 0; i < cells.size(); i++) {
+            // Skip label column - it will be processed separately
+            if (static_cast<int>(i) == labelIdx) {
+                // Extract label
+                try {
+                    label = static_cast<int>(std::stod(cells[i]));
+                } catch (...) {
+                    // If label is categorical, encode it
+                    if (categoryEncoding.count(i)) {
+                        label = categoryEncoding[i][cells[i]];
+                    }
+                }
+                continue;
+            }
+
+            // Process feature columns
             if (catColSet.count(i)) {
                 // One-hot encode categorical column
                 int numCategories = categoryValues[i].size();
@@ -381,18 +468,6 @@ std::vector<Point> DatasetLoader::loadCSVWithEncoding(const std::string& filepat
                     coords.push_back(std::stod(cells[i]));
                 } catch (...) {
                     coords.push_back(0.0);
-                }
-            }
-        }
-
-        // Last column is label
-        if (!cells.empty()) {
-            try {
-                label = static_cast<int>(std::stod(cells.back()));
-            } catch (...) {
-                // If label is categorical, encode it
-                if (categoryEncoding.count(cells.size() - 1)) {
-                    label = categoryEncoding[cells.size() - 1][cells.back()];
                 }
             }
         }

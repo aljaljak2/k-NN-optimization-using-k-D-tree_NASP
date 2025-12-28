@@ -20,6 +20,7 @@ class KDTree {
 private:
     int k;              // number of dimensions
     KDNode* root;
+    mutable int distance_calc_count;  // Track distance calculations
 
     // Algorithm functions from Bentley 1975
     int nextdisc(int disc);
@@ -68,6 +69,10 @@ public:
 
     // k-NN search - find k nearest neighbors
     std::vector<Point> kNearestNeighbors(const Point& target, int k);
+
+    // Get distance calculations count (for metrics)
+    void resetDistanceCount() { distance_calc_count = 0; }
+    int getDistanceCount() const { return distance_calc_count; }
 };
 
 #endif // KDTREE_H

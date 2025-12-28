@@ -8,12 +8,14 @@
 void printUsage() {
     std::cout << "Usage: test_knn_kdtree <csv_file> <k> [options]\n";
     std::cout << "\nOptions:\n";
-    std::cout << "  --no-header         CSV file has no header row\n";
-    std::cout << "  --auto-encode       Automatically detect and one-hot encode categorical columns\n";
-    std::cout << "  --test-ratio <r>    Test set ratio (default: 0.2)\n";
-    std::cout << "  --output <file>     Output JSON file for metrics (default: metrics_kdtree.json)\n";
+    std::cout << "  --no-header            CSV file has no header row\n";
+    std::cout << "  --auto-encode          Automatically detect and one-hot encode categorical columns\n";
+    std::cout << "  --test-ratio <r>       Test set ratio (default: 0.2)\n";
+    std::cout << "  --output <file>        Output JSON file for metrics (default: metrics_kdtree.json)\n";
+    std::cout << "  --label-column <idx>   Index of label column (default: -1 for last column, 0 for first)\n";
     std::cout << "\nExample:\n";
     std::cout << "  test_knn_kdtree iris.csv 5 --auto-encode\n";
+    std::cout << "  test_knn_kdtree letter.csv 3 --auto-encode --label-column 0\n";
 }
 
 int main(int argc, char* argv[]) {
@@ -30,6 +32,7 @@ int main(int argc, char* argv[]) {
     bool autoEncode = false;
     double testRatio = 0.2;
     std::string outputFile = "metrics_kdtree.json";
+    int labelColumn = -1;  // -1 means last column
 
     for (int i = 3; i < argc; i++) {
         std::string arg = argv[i];
@@ -41,6 +44,8 @@ int main(int argc, char* argv[]) {
             testRatio = std::stod(argv[++i]);
         } else if (arg == "--output" && i + 1 < argc) {
             outputFile = argv[++i];
+        } else if (arg == "--label-column" && i + 1 < argc) {
+            labelColumn = std::stoi(argv[++i]);
         }
     }
 
@@ -56,10 +61,10 @@ int main(int argc, char* argv[]) {
         std::vector<Point> data;
 
         if (autoEncode) {
-            data = DatasetLoader::loadCSVWithEncoding(csvFile, hasHeader);
+            data = DatasetLoader::loadCSVWithEncoding(csvFile, hasHeader, {}, labelColumn);
             std::cout << "Loaded with automatic categorical encoding" << std::endl;
         } else {
-            data = DatasetLoader::loadCSV(csvFile, hasHeader);
+            data = DatasetLoader::loadCSV(csvFile, hasHeader, labelColumn);
             std::cout << "Loaded as numeric data" << std::endl;
         }
 

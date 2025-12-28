@@ -13,13 +13,18 @@
 class DatasetLoader {
 public:
     // Load CSV format datasets (numeric only)
-    static std::vector<Point> loadCSV(const std::string& filepath, bool hasHeader = true);
+    // labelColumn: index of the column containing the label (-1 means last column)
+    static std::vector<Point> loadCSV(const std::string& filepath,
+                                      bool hasHeader = true,
+                                      int labelColumn = -1);
 
     // Load CSV with automatic one-hot encoding for categorical columns
     // categoricalColumns: indices of columns to one-hot encode (empty = auto-detect)
+    // labelColumn: index of the column containing the label (-1 means last column)
     static std::vector<Point> loadCSVWithEncoding(const std::string& filepath,
                                                    bool hasHeader = true,
-                                                   const std::vector<int>& categoricalColumns = {});
+                                                   const std::vector<int>& categoricalColumns = {},
+                                                   int labelColumn = -1);
 
     // Generate synthetic datasets for testing
     static std::vector<Point> generateRandom(int numPoints, int dimensions, int seed = 42);
@@ -38,7 +43,9 @@ private:
     static bool isNumeric(const std::string& str);
 
     // Helper: Detect categorical columns automatically
-    static std::vector<int> detectCategoricalColumns(const std::string& filepath, bool hasHeader);
+    static std::vector<int> detectCategoricalColumns(const std::string& filepath,
+                                                      bool hasHeader,
+                                                      int labelColumn = -1);
 };
 
 #endif // DATASET_LOADER_H

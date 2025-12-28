@@ -104,6 +104,7 @@ std::map<int, double> Metrics::f1Score(const std::vector<int>& true_labels,
 
     std::set<int> labels;
     for (int label : true_labels) labels.insert(label);
+    for (int label : predicted_labels) labels.insert(label);
 
     for (int label : labels) {
         double p = prec[label];
@@ -130,6 +131,7 @@ std::map<int, std::vector<Metrics::ROCPoint>> Metrics::rocCurve(
     if (prediction_scores.empty()) {
         std::set<int> labels;
         for (int label : true_labels) labels.insert(label);
+        for (int label : predicted_labels) labels.insert(label);
 
         // For each class, calculate single ROC point
         for (int target_class : labels) {
@@ -181,6 +183,7 @@ void Metrics::printMetrics(const std::vector<int>& true_labels,
 
     std::set<int> labels;
     for (int label : true_labels) labels.insert(label);
+    for (int label : predicted_labels) labels.insert(label);
 
     for (int label : labels) {
         std::cout << std::setw(10) << label
@@ -231,6 +234,7 @@ void Metrics::saveMetricsJSON(const std::vector<int>& true_labels,
 
     std::set<int> labels;
     for (int label : true_labels) labels.insert(label);
+    for (int label : predicted_labels) labels.insert(label);
 
     file << "  \"precision\": {";
     bool first = true;

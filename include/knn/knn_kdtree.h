@@ -25,6 +25,15 @@ public:
     void fit(const std::vector<Point>& data);
     std::vector<Point> findKNearest(const Point& query);
     int predict(const Point& query);  // For classification
+
+    // New: Single instance prediction with metrics
+    struct PredictionResult {
+        int predicted_label;
+        int distance_calculations;
+        double prediction_time_ms;
+    };
+
+    PredictionResult predictWithMetrics(const Point& query);
 };
 
 #endif // KNN_KDTREE_H

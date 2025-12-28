@@ -75,10 +75,35 @@ def plot_roc_curves(metrics_list, algorithm_names, ax=None):
     if ax is None:
         fig, ax = plt.subplots(figsize=(10, 8))
 
-    colors = plt.cm.tab10(np.linspace(0, 1, len(metrics_list)))
-
-    for idx, (metrics, alg_name) in enumerate(zip(metrics_list, algorithm_names)):
+    # Count total number of unique classes across all algorithms
+    all_classes = set()
+    for metrics in metrics_list:
         roc_data = metrics.get('roc_curve', {})
+        all_classes.update(roc_data.keys())
+
+    num_classes = len(all_classes)
+
+    # Generate colors based on number of classes
+    # Use different colormaps for better distinction
+    if num_classes <= 10:
+        class_colormap = plt.cm.tab10
+    elif num_classes <= 20:
+        class_colormap = plt.cm.tab20
+    else:
+        # For more than 20 classes, use a continuous colormap
+        class_colormap = plt.cm.hsv
+
+    # Create color mapping for each class
+    sorted_classes = sorted(all_classes, key=lambda x: int(x) if str(x).isdigit() else str(x))
+    class_colors = {cls: class_colormap(i / max(num_classes - 1, 1))
+                   for i, cls in enumerate(sorted_classes)}
+
+    # Line style per algorithm (if multiple algorithms)
+    linestyles = ['-', '--', '-.', ':']
+
+    for alg_idx, (metrics, alg_name) in enumerate(zip(metrics_list, algorithm_names)):
+        roc_data = metrics.get('roc_curve', {})
+        linestyle = linestyles[alg_idx % len(linestyles)]
 
         for class_label, points in roc_data.items():
             if not points:
@@ -95,9 +120,17 @@ def plot_roc_curves(metrics_list, algorithm_names, ax=None):
             fpr = [0] + list(fpr) + [1]
             tpr = [0] + list(tpr) + [1]
 
-            label = f'{alg_name} - Class {class_label}'
-            ax.plot(fpr, tpr, label=label, color=colors[idx],
-                   linewidth=2, marker='o', markersize=4)
+            # Use class-specific color
+            color = class_colors.get(class_label, 'gray')
+
+            # Label includes algorithm name only if multiple algorithms
+            if len(metrics_list) > 1:
+                label = f'{alg_name} - Class {class_label}'
+            else:
+                label = f'Class {class_label}'
+
+            ax.plot(fpr, tpr, label=label, color=color, linestyle=linestyle,
+                   linewidth=2, marker='o', markersize=4, alpha=0.8)
 
     # Plot diagonal (random classifier)
     ax.plot([0, 1], [0, 1], 'k--', alpha=0.3, label='Random Classifier')

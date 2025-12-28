@@ -3,7 +3,7 @@
 #include <cmath>
 #include <algorithm>
 
-KDTree::KDTree(int dimensions) : k(dimensions), root(nullptr) {}
+KDTree::KDTree(int dimensions) : k(dimensions), root(nullptr), distance_calc_count(0) {}
 
 KDTree::~KDTree() {
     delete root;
@@ -234,6 +234,7 @@ void KDTree::inorder() {
 
 // Euclidean distance (for nearest neighbor)
 double KDTree::distance(const Point& a, const Point& b) {
+    distance_calc_count++;  // Track distance calculations
     double sum = 0;
     for (size_t i = 0; i < a.dimensions(); i++) {
         double diff = a[i] - b[i];

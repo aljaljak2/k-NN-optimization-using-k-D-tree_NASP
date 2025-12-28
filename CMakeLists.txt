@@ -41,6 +41,16 @@ target_link_libraries(test_knn_basic knn utils)
 add_executable(test_knn_kdtree tests/test_knn_kdtree.cpp)
 target_link_libraries(test_knn_kdtree knn kdtree utils)
 
+add_executable(kdtreeTest tests/kdtreeTest.cpp)
+target_link_libraries(kdtreeTest kdtree utils)
+
+# Single instance prediction executables
+add_executable(predict_knn_basic tests/predict_knn_basic.cpp)
+target_link_libraries(predict_knn_basic knn utils)
+
+add_executable(predict_knn_kdtree tests/predict_knn_kdtree.cpp)
+target_link_libraries(predict_knn_kdtree knn kdtree utils)
+
 # Examples (commented out - not yet implemented)
 # add_executable(example_bentley_1975 examples/example_bentley_1975.cpp)
 # target_link_libraries(example_bentley_1975 kdtree utils)
