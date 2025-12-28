@@ -35,7 +35,6 @@ std::vector<Point> DatasetLoader::loadCSV(const std::string& filepath, bool hasH
         std::string cell;
         std::vector<double> coords;
         int label = -1;
-        bool isFirst = true;
 
         while (std::getline(ss, cell, ',')) {
             // Trim whitespace
@@ -199,33 +198,36 @@ bool DatasetLoader::isNumeric(const std::string& str) {
 std::vector<int> DatasetLoader::detectCategoricalColumns(const std::string& filepath, bool hasHeader) {
     std::vector<int> categoricalCols;
     std::ifstream file(filepath);
-
+    std::cout << "Detecting categorical columns in file: " << filepath << std::endl;
     if (!file.is_open()) {
         return categoricalCols;
     }
 
+    std::cout << "Analyzing data types of columns..." << std::endl;
     std::string line;
-    bool firstLine = true;
+    bool firstDataLine = true;  // Track first DATA line (not header)
     std::vector<bool> isNumericColumn;
+    std::map<int, std::set<std::string>> uniqueValues;  // Track unique values per column
+    int rowCount = 0;  // Track rows checked (NOT static!)
+
+    // Skip header if present
+    if (hasHeader) {
+        std::getline(file, line);
+    }
 
     while (std::getline(file, line)) {
-        if (firstLine && hasHeader) {
-            firstLine = false;
-            continue;
-        }
-
         if (line.empty()) continue;
 
         std::stringstream ss(line);
         std::string cell;
-        int colIndex = 0;
+        size_t colIndex = 0;
 
         while (std::getline(ss, cell, ',')) {
             // Trim whitespace
             cell.erase(0, cell.find_first_not_of(" \t\r\n"));
             cell.erase(cell.find_last_not_of(" \t\r\n") + 1);
 
-            if (firstLine) {
+            if (firstDataLine) {
                 // Initialize on first data line
                 isNumericColumn.push_back(isNumeric(cell));
             } else {
@@ -234,27 +236,39 @@ std::vector<int> DatasetLoader::detectCategoricalColumns(const std::string& file
                     isNumericColumn[colIndex] = false;
                 }
             }
+
+            // Track unique values for categorical columns
+            if (colIndex < isNumericColumn.size() && !isNumericColumn[colIndex]) {
+                uniqueValues[static_cast<int>(colIndex)].insert(cell);
+            }
+
             colIndex++;
         }
 
-        if (firstLine) {
-            firstLine = false;
-        }
+        firstDataLine = false;
 
         // Only check first 100 rows for efficiency
-        static int rowCount = 0;
         if (++rowCount > 100) break;
     }
 
     file.close();
 
     // Collect categorical column indices (exclude last column - label)
+    // Skip columns with too many unique values (likely IDs or other non-categorical data)
+    const int MAX_CATEGORIES = 50;  // Maximum number of categories to one-hot encode
+
     for (size_t i = 0; i < isNumericColumn.size() - 1; i++) {
         if (!isNumericColumn[i]) {
-            categoricalCols.push_back(static_cast<int>(i));
+            int numUnique = uniqueValues[i].size();
+            if (numUnique <= MAX_CATEGORIES) {
+                categoricalCols.push_back(static_cast<int>(i));
+            } else {
+                std::cout << "Skipping column " << i << " with " << numUnique
+                         << " unique values (exceeds max " << MAX_CATEGORIES << ")" << std::endl;
+            }
         }
     }
-
+    std::cout << "Detected " << categoricalCols.size() << " categorical columns" << std::endl;
     return categoricalCols;
 }
 
@@ -271,7 +285,9 @@ std::vector<Point> DatasetLoader::loadCSVWithEncoding(const std::string& filepat
     // Auto-detect categorical columns if not specified
     std::vector<int> catCols = categoricalColumns;
     if (catCols.empty()) {
+        std::cout << "Auto-detecting categorical columns..." << std::endl;
         catCols = detectCategoricalColumns(filepath, hasHeader);
+        std::cout << "Found " << catCols.size() << " categorical columns to encode" << std::endl;
     }
 
     std::set<int> catColSet(catCols.begin(), catCols.end());
@@ -308,12 +324,16 @@ std::vector<Point> DatasetLoader::loadCSVWithEncoding(const std::string& filepat
     }
 
     // Create encoding maps
+    int totalEncodedDimensions = 0;
     for (const auto& [colIdx, values] : categoryValues) {
         int encoding = 0;
+        std::cout << "Column " << colIdx << ": " << values.size() << " categories" << std::endl;
+        totalEncodedDimensions += values.size();
         for (const auto& value : values) {
             categoryEncoding[colIdx][value] = encoding++;
         }
     }
+    std::cout << "Total dimensions from categorical encoding: " << totalEncodedDimensions << std::endl;
 
     // Second pass: load data with one-hot encoding
     file.clear();
@@ -334,7 +354,6 @@ std::vector<Point> DatasetLoader::loadCSVWithEncoding(const std::string& filepat
         std::string cell;
         std::vector<double> coords;
         int label = -1;
-        int colIndex = 0;
         std::vector<std::string> cells;
 
         // Parse all cells
