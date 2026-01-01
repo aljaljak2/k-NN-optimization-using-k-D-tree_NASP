@@ -2,6 +2,7 @@
 #define DISTANCE_METRICS_H
 
 #include <vector>
+#include <atomic>
 #include "point.h"
 
 /**
@@ -10,6 +11,13 @@
  */
 
 namespace DistanceMetrics {
+    // Global counter for distance calculations (thread-safe)
+    extern std::atomic<long long> distance_calculation_counter;
+
+    // Counter management
+    void resetCounter();
+    long long getCounter();
+
     // Euclidean distance (L2 norm)
     double euclidean(const Point& a, const Point& b);
     double euclidean(const std::vector<double>& a, const std::vector<double>& b);

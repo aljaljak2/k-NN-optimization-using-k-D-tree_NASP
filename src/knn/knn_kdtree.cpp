@@ -112,3 +112,13 @@ KNNKDTree::PredictionResult KNNKDTree::predictWithMetrics(const Point& query) {
 
     return {predictedLabel, distance_calculations, time_ms};
 }
+
+void KNNKDTree::resetDistanceCount() {
+    if (tree) {
+        tree->resetDistanceCount();
+    }
+}
+
+int KNNKDTree::getDistanceCount() const {
+    return tree ? tree->getDistanceCount() : 0;
+}

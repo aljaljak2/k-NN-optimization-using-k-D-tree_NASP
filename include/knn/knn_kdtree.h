@@ -34,6 +34,10 @@ public:
     };
 
     PredictionResult predictWithMetrics(const Point& query);
+
+    // Distance calculation counter methods
+    void resetDistanceCount();
+    int getDistanceCount() const;
 };
 
 #endif // KNN_KDTREE_H

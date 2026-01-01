@@ -4,11 +4,24 @@
 
 namespace DistanceMetrics {
 
+// Initialize the global counter
+std::atomic<long long> distance_calculation_counter{0};
+
+void resetCounter() {
+    distance_calculation_counter.store(0);
+}
+
+long long getCounter() {
+    return distance_calculation_counter.load();
+}
+
 double euclidean(const Point& a, const Point& b) {
+    distance_calculation_counter.fetch_add(1);
     return euclidean(a.coordinates, b.coordinates);
 }
 
 double euclidean(const std::vector<double>& a, const std::vector<double>& b) {
+    // Note: Don't increment here, already counted in Point version
     double sum = 0;
     for (size_t i = 0; i < a.size(); i++) {
         double diff = a[i] - b[i];
