@@ -3,7 +3,10 @@
 #include <cmath>
 #include <algorithm>
 
-KDTree::KDTree(int dimensions) : k(dimensions), root(nullptr), distance_calc_count(0) {}
+KDTree::KDTree(int dimensions, DistanceType metric, double p)
+    : k(dimensions), root(nullptr), distance_calc_count(0),
+      distanceMetric(metric), minkowskiP(p) {
+}
 
 KDTree::~KDTree() {
     delete root;
@@ -232,15 +235,22 @@ void KDTree::inorder() {
     inorderRec(root);
 }
 
-// Euclidean distance (for nearest neighbor)
+// Distance calculation (supports multiple metrics)
 double KDTree::distance(const Point& a, const Point& b) {
     distance_calc_count++;  // Track distance calculations
-    double sum = 0;
-    for (size_t i = 0; i < a.dimensions(); i++) {
-        double diff = a[i] - b[i];
-        sum += diff * diff;
+
+    switch (distanceMetric) {
+        case DistanceType::EUCLIDEAN:
+            return DistanceMetrics::euclidean(a, b);
+        case DistanceType::MANHATTAN:
+            return DistanceMetrics::manhattan(a, b);
+        case DistanceType::HAMMING:
+            return DistanceMetrics::hamming(a, b);
+        case DistanceType::MINKOWSKI:
+            return DistanceMetrics::minkowski(a, b, minkowskiP);
+        default:
+            return DistanceMetrics::euclidean(a, b);
     }
-    return std::sqrt(sum);
 }
 
 // Nearest neighbor search (recursive)

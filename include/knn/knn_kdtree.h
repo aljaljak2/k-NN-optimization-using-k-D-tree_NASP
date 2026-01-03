@@ -4,6 +4,7 @@
 #include <vector>
 #include "../kdtree/kdtree.h"
 #include "../utils/point.h"
+#include "../utils/distance_metrics.h"
 
 /**
  * k-NN implementation using k-d tree optimization
@@ -17,9 +18,11 @@ private:
     std::vector<Point> trainingData;
     int k;
     int dimensions;
+    DistanceType distanceMetric;
+    double minkowskiP;
 
 public:
-    KNNKDTree(int k_neighbors, int dims);
+    KNNKDTree(int k_neighbors, int dims, DistanceType metric = DistanceType::EUCLIDEAN, double p = 2.0);
     ~KNNKDTree();
 
     void fit(const std::vector<Point>& data);

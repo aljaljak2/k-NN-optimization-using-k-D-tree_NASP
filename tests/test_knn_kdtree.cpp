@@ -10,11 +10,13 @@ void printUsage() {
     std::cout << "\nOptions:\n";
     std::cout << "  --no-header            CSV file has no header row\n";
     std::cout << "  --auto-encode          Automatically detect and one-hot encode categorical columns\n";
+    std::cout << "  --distance <type>      Distance metric: euclidean, manhattan, hamming, minkowski\n";
+    std::cout << "  --minkowski-p <p>      Parameter p for Minkowski distance (default: 2.0)\n";
     std::cout << "  --test-ratio <r>       Test set ratio (default: 0.2)\n";
     std::cout << "  --output <file>        Output JSON file for metrics (default: metrics_kdtree.json)\n";
     std::cout << "  --label-column <idx>   Index of label column (default: -1 for last column, 0 for first)\n";
     std::cout << "\nExample:\n";
-    std::cout << "  test_knn_kdtree iris.csv 5 --auto-encode\n";
+    std::cout << "  test_knn_kdtree iris.csv 5 --auto-encode --distance manhattan\n";
     std::cout << "  test_knn_kdtree letter.csv 3 --auto-encode --label-column 0\n";
 }
 
@@ -30,6 +32,8 @@ int main(int argc, char* argv[]) {
 
     bool hasHeader = true;
     bool autoEncode = false;
+    DistanceType distMetric = DistanceType::EUCLIDEAN;
+    double minkowskiP = 2.0;
     double testRatio = 0.2;
     std::string outputFile = "metrics_kdtree.json";
     int labelColumn = -1;  // -1 means last column
@@ -40,6 +44,14 @@ int main(int argc, char* argv[]) {
             hasHeader = false;
         } else if (arg == "--auto-encode") {
             autoEncode = true;
+        } else if (arg == "--distance" && i + 1 < argc) {
+            std::string dist = argv[++i];
+            if (dist == "euclidean") distMetric = DistanceType::EUCLIDEAN;
+            else if (dist == "manhattan") distMetric = DistanceType::MANHATTAN;
+            else if (dist == "hamming") distMetric = DistanceType::HAMMING;
+            else if (dist == "minkowski") distMetric = DistanceType::MINKOWSKI;
+        } else if (arg == "--minkowski-p" && i + 1 < argc) {
+            minkowskiP = std::stod(argv[++i]);
         } else if (arg == "--test-ratio" && i + 1 < argc) {
             testRatio = std::stod(argv[++i]);
         } else if (arg == "--output" && i + 1 < argc) {
@@ -86,7 +98,7 @@ int main(int argc, char* argv[]) {
         auto startTrain = std::chrono::high_resolution_clock::now();
 
         int dims = data[0].dimensions();
-        KNNKDTree knn(k, dims);
+        KNNKDTree knn(k, dims, distMetric, minkowskiP);
         knn.fit(train);
 
         auto endTrain = std::chrono::high_resolution_clock::now();

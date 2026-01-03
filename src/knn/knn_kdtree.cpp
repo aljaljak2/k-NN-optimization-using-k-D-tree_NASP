@@ -3,8 +3,9 @@
 #include <stdexcept>
 #include <chrono>
 
-KNNKDTree::KNNKDTree(int k_neighbors, int dims)
-    : tree(nullptr), k(k_neighbors), dimensions(dims) {
+KNNKDTree::KNNKDTree(int k_neighbors, int dims, DistanceType metric, double p)
+    : tree(nullptr), k(k_neighbors), dimensions(dims),
+      distanceMetric(metric), minkowskiP(p) {
     if (k <= 0) {
         throw std::invalid_argument("k must be positive");
     }
@@ -12,7 +13,7 @@ KNNKDTree::KNNKDTree(int k_neighbors, int dims)
         throw std::invalid_argument("dimensions must be positive");
     }
 
-    tree = new KDTree(dims);
+    tree = new KDTree(dims, metric, p);
 }
 
 KNNKDTree::~KNNKDTree() {

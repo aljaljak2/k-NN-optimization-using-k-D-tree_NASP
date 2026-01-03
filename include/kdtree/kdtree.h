@@ -3,6 +3,7 @@
 
 #include "kdnode.h"
 #include "../utils/point.h"
+#include "../utils/distance_metrics.h"
 #include <vector>
 
 /**
@@ -21,6 +22,8 @@ private:
     int k;              // number of dimensions
     KDNode* root;
     mutable int distance_calc_count;  // Track distance calculations
+    DistanceType distanceMetric;      // Distance metric to use
+    double minkowskiP;                // Parameter for Minkowski distance
 
     // Algorithm functions from Bentley 1975
     int nextdisc(int disc);
@@ -55,7 +58,7 @@ private:
                     std::vector<NeighborCandidate>& candidates, int k);
 
 public:
-    KDTree(int dimensions);
+    KDTree(int dimensions, DistanceType metric = DistanceType::EUCLIDEAN, double p = 2.0);
     ~KDTree();
 
     // Main operations

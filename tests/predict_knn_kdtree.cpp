@@ -9,10 +9,12 @@ void printUsage() {
     std::cout << "\nOptions:\n";
     std::cout << "  --no-header                    CSV file has no header row\n";
     std::cout << "  --auto-encode                  Automatically detect and one-hot encode categorical columns\n";
+    std::cout << "  --distance <type>              Distance metric: euclidean, manhattan, hamming, minkowski\n";
+    std::cout << "  --minkowski-p <p>              Parameter p for Minkowski distance (default: 2.0)\n";
     std::cout << "  --label-column <idx>           Index of label column (default: -1 for last column)\n";
     std::cout << "  --predict-instance-index <idx> Index of instance to predict (0-based, within data rows)\n";
     std::cout << "\nExample:\n";
-    std::cout << "  predict_knn_kdtree dataset.csv 5 --predict-instance-index 10 --auto-encode\n";
+    std::cout << "  predict_knn_kdtree dataset.csv 5 --predict-instance-index 10 --auto-encode --distance manhattan\n";
 }
 
 int main(int argc, char* argv[]) {
@@ -28,6 +30,8 @@ int main(int argc, char* argv[]) {
     // Parse options
     bool hasHeader = true;
     bool autoEncode = false;
+    DistanceType distMetric = DistanceType::EUCLIDEAN;
+    double minkowskiP = 2.0;
     int labelColumn = -1;
     int predictInstanceIndex = -1;  // Index of instance to predict
 
@@ -37,6 +41,14 @@ int main(int argc, char* argv[]) {
             hasHeader = false;
         } else if (arg == "--auto-encode") {
             autoEncode = true;
+        } else if (arg == "--distance" && i + 1 < argc) {
+            std::string dist = argv[++i];
+            if (dist == "euclidean") distMetric = DistanceType::EUCLIDEAN;
+            else if (dist == "manhattan") distMetric = DistanceType::MANHATTAN;
+            else if (dist == "hamming") distMetric = DistanceType::HAMMING;
+            else if (dist == "minkowski") distMetric = DistanceType::MINKOWSKI;
+        } else if (arg == "--minkowski-p" && i + 1 < argc) {
+            minkowskiP = std::stod(argv[++i]);
         } else if (arg == "--label-column" && i + 1 < argc) {
             labelColumn = std::stoi(argv[++i]);
         } else if (arg == "--predict-instance-index" && i + 1 < argc) {
@@ -91,7 +103,7 @@ int main(int argc, char* argv[]) {
 
         // Train KNN on training data (excluding the query instance)
         int dims = trainingData[0].dimensions();
-        KNNKDTree knn(k, dims);
+        KNNKDTree knn(k, dims, distMetric, minkowskiP);
         knn.fit(trainingData);
 
         // Predict
