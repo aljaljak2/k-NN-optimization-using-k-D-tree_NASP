@@ -1,69 +1,60 @@
-# k-NN Algorithm Optimization using k-d Trees
+# Optimizacija k-NN Algoritma pomoću k-d Stabala
 
-Research project implementing and comparing various k-NN algorithm optimizations using k-dimensional trees.
+Projekat implementira i poredi različite optimizacije k-NN algoritma koristeći k-dimenzionalna stabla.
 
-## Scientific References
-
-This implementation follows algorithms and techniques from the following peer-reviewed papers:
-
-### 1. Bentley, J. L. (1975) - Original k-d tree paper
-**"Multidimensional binary search trees used for associative searching"**
-- Source: Communications of the ACM, Vol. 18, Issue 9, pp. 509-517
-- Link: https://dl.acm.org/doi/10.1145/361002.361007
-- **Implementation**: Core k-d tree structure, INSERT, DELETE, SEARCH algorithms
-
-### 2. Pinkham, R., Zeng, S., Zhang, Z. (2020) - QuickNN
-**"QuickNN: Memory and Performance Optimization of k-d Tree Based Nearest Neighbor Search for 3D Point Clouds"**
-- Source: IEEE HPCA 2020
-- Link: https://ieeexplore.ieee.org/document/9065602/
-- PDF: https://web.eecs.umich.edu/~zhengya/papers/pinkham_hpca20.pdf
-- **Dataset**: KITTI (30k 3D points), Ford Campus Vision
-- **Implementation**: Memory layout optimization, cache-friendly structures
-
-### 3. Jiang, K., et al. (2018) - Revised k-d tree
-**"Fast neighbor search by using revised k-d tree"**
-- Source: Information Sciences, Vol. 472
-- Link: https://www.sciencedirect.com/science/article/abs/pii/S0020025518307126
-- **Implementation**: Techniques for reducing unnecessary distance calculations
-
-### 4. Uddin, S. et al. (2022) - k-NN variants comparison
-**"Comparative performance analysis of K-nearest neighbour (KNN) algorithm and its different variants for disease prediction"**
-- Source: Scientific Reports, Vol. 12
-- Link: https://www.nature.com/articles/s41598-022-10358-x
-- **Datasets**: 8 benchmark datasets (Kaggle, UCI ML Repository, OpenML)
-- **Implementation**: Comparison of 9 k-NN variants
-
-## Project Structure
+## Struktura Projekta
 
 ```
 .
-├── include/              # Header files
-│   ├── kdtree/          # Bentley (1975) k-d tree
-│   ├── knn/             # k-NN implementations
-│   ├── optimizations/   # QuickNN, Revised k-d tree
-│   └── utils/           # Utilities (distance metrics, data loading)
-├── src/                 # Implementation files
-├── benchmarks/          # Performance testing
-├── tests/               # Unit tests
-├── datasets/            # Benchmark datasets
-├── visualization/       # Visualization tools
-├── examples/            # Usage examples
-├── docs/                # Documentation and paper notes
-└── results/             # Experimental results
+├── include/              # Header fajlovi
+│   ├── kdtree/          # k-d stablo implementacije
+│   ├── knn/             # k-NN implementacije
+│   └── utils/           # Pomoćne funkcije (distance metrike, učitavanje podataka)
+├── src/                 # Implementacioni fajlovi
+│   ├── kdtree/          # k-d stablo
+│   ├── knn/             # k-NN algoritmi
+│   ├── optimizations/   # Optimizacije
+│   └── utils/           # Pomoćne funkcije
+├── benchmarks/          # Testiranje performansi
+│   ├── include/         # Benchmark header-i
+│   └── src/             # Benchmark implementacije
+├── tests/               # Unit testovi
+├── datasets/            # Skupovi podataka za testiranje
+├── visualization/       # Alati za vizualizaciju
+├── docs/                # Dokumentacija
+└── results/             # Rezultati eksperimenata
+    ├── benchmark_results/  # Rezultati testova performansi
+    └── figures/         # Generisani grafici i plot-ovi
 ```
 
-## Implementations
+## Implementirane Funkcionalnosti
 
-1. Classic k-NN (brute-force baseline)
-2. Basic k-d tree (Bentley 1975)
-3. k-NN with k-d tree optimization
-4. Revised k-d tree (Jiang et al. 2018)
-5. QuickNN optimizations (Pinkham et al. 2020)
-6. k-NN variants (Uddin et al. 2022)
-7. Benchmarking framework
-8. 2D/3D visualization
+### 1. k-d Stablo Operacije
+- Konstrukcija stabla (build)
+- Umetanje čvora (insert)
+- Brisanje čvora (delete)
+- Pretraga najbližih susjeda (k-NN search)
+- Prikaz strukture stabla
 
-## Building the Project
+### 2. k-NN Algoritmi
+- Klasični k-NN (brute-force)
+- k-NN sa k-d stablom
+- Različite distance metrike (Euclidean, Manhattan, Minkowski)
+- Podrška za train/test split
+- Predviđanje klasa pojedinačnih i grupnih uzoraka
+
+### 3. Optimizacije
+- Revised k-d tree (smanjenje nepotrebnih kalkulacija distanci)
+- QuickNN (optimizacija memorijskog layouta)
+- Različite varijante k-NN algoritma
+
+### 4. Benchmarking i Testiranje
+- Poređenje performansi različitih pristupa
+- Mjerenje vremena izvršavanja
+- Testiranje tačnosti klasifikacije
+- Vizualizacija rezultata
+
+## Kompajliranje Projekta
 
 ```bash
 mkdir build
@@ -72,33 +63,71 @@ cmake ..
 make
 ```
 
-## Running Examples
+## Pokretanje Testova
 
-```bash
-# Bentley (1975) k-d tree examples
-./examples/example_bentley_1975
+### Windows (PowerShell)
+```powershell
+rm -r build  # Obriši stari build
+mkdir build
+cd build
 
-# Basic k-NN vs k-d tree k-NN comparison
-./benchmarks/benchmark_basic_vs_kdtree
+# Forsiraj MinGW Makefiles generator
+cmake -G "MinGW Makefiles" ..
+
+# Build
+mingw32-make
+
+# Pokreni testove
+cd tests
+./test_kdtree.exe
+./test_knn.exe
 ```
 
-## Datasets
+### Linux
+```bash
+rm -rf build  # Obriši stari build
+mkdir build
+cd build
 
-Datasets are organized in `datasets/` directory:
-- `synthetic/` - Generated test data
-- `kitti/` - KITTI 3D point cloud dataset
-- `uci/` - UCI Machine Learning Repository datasets
+cmake ..
+make
 
-See [datasets/README.md](datasets/README.md) for dataset sources and citations.
+# Pokreni testove
+cd tests
+./test_kdtree
+./test_knn
+```
 
-## Documentation
+Za pokretanje benchmark testova i detaljnije informacije o performansama, pogledajte [benchmarks/README.md](benchmarks/README.md).
 
-Detailed notes on each paper implementation are in the `docs/` directory:
-- [Bentley 1975 Implementation Notes](docs/bentley_1975_notes.md)
-- [QuickNN Implementation Notes](docs/quicknn_notes.md)
-- [Revised k-d tree Notes](docs/revised_kdtree_notes.md)
-- [k-NN Variants Notes](docs/uddin_2022_notes.md)
+## Skupovi Podataka
 
-## License
+Podaci su organizovani u `datasets/` direktorijumu:
+- `letter-recog/` - Letter Recognition dataset
+- `covtype/` - Covertype dataset
+- `wineqt/` - Wine Quality dataset
 
-Academic/Research use only. Please cite the original papers when using this code.
+## Vizualizacija
+
+U `visualization/` direktorijumu se nalaze Python skripte za vizualizaciju:
+- `plot_benchmarks.py` - Vizualizacija benchmark rezultata
+- `visualize_metrics.py` - Vizualizacija metrika performansi
+- `visualize_kdtree.cpp` - C++ vizualizacija strukture k-d stabla
+
+### Pokretanje Python skripti
+
+```bash
+# Instaliraj potrebne pakete
+cd visualization
+pip install -r requirements.txt
+
+# Pokreni vizualizaciju metrika (jedan ili više JSON fajlova)
+python visualize_metrics.py <metrics_file1.json> [metrics_file2.json ...]
+
+# Primjeri:
+python visualize_metrics.py metrics_basic.json
+python visualize_metrics.py metrics_basic.json metrics_kdtree.json
+
+# Pokreni vizualizaciju benchmark rezultata
+python plot_benchmarks.py
+```
